@@ -1,0 +1,246 @@
+Sub ClearSheetContents()
+    Dim ws As Worksheet
+    Dim sheetNames As Variant
+    Dim i As Integer
+    
+    ' Specify the names of the sheets to be cleared
+    sheetNames = Array("Drop", "Drop AMEX")
+    
+    ' Loop through each specified sheet
+    For i = LBound(sheetNames) To UBound(sheetNames)
+        On Error Resume Next
+        Set ws = ThisWorkbook.Sheets(sheetNames(i))
+        If Not ws Is Nothing Then
+            ws.Rows("2:" & ws.Rows.Count).ClearContents ' Clear everything below row 1
+        End If
+        On Error GoTo 0
+    Next i
+    
+    MsgBox "Sheets cleaned successfully!", vbInformation
+End Sub
+
+
+Sub CopyValuesOnly(srcWs As Worksheet, destWs As Worksheet)
+    Dim srcRange As Range
+    Set srcRange = srcWs.UsedRange
+    destWs.Cells.Clear ' Clear the destination sheet
+    
+    srcRange.Copy
+    destWs.Cells(1, 1).PasteSpecial Paste:=xlPasteValues
+    destWs.Cells(1, 1).PasteSpecial Paste:=xlPasteFormats 'Also copy format after copying values
+End Sub
+
+Sub CopyFolderStructure(sourceFolder As String, destinationFolder As String)
+    Dim fso As Object
+    Dim folderName As String
+    
+    ' Initialize FileSystemObject
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' Extract the folder name from the source folder path (last part of the path)
+    folderName = fso.GetFolder(sourceFolder).Name
+    
+    ' Check if the source folder exists
+    If Not fso.FolderExists(sourceFolder) Then
+        MsgBox "Source folder does not exist.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Check if the destination folder exists, if not create it
+    If Not fso.FolderExists(destinationFolder) Then
+        fso.CreateFolder destinationFolder
+    End If
+    
+    ' Copy the entire folder structure (including subfolders and files)
+    On Error Resume Next
+    fso.CopyFolder sourceFolder, destinationFolder & "\" & folderName
+    On Error GoTo 0
+    
+    MsgBox "Folder and its contents have been copied successfully!"
+End Sub
+
+
+Sub CreateFoldersAndFiles()
+
+    ' Define variables
+    Dim currentFilePath As String
+    Dim newFolderName As String
+    Dim mainFolderPath As String
+    Dim subFolderNames As Variant
+    Dim newFileName As String
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim newWs As Worksheet
+    Dim filePath As String
+    Dim password As String
+    Dim cell As Range
+    Dim sourceFolder As String
+    Dim destinationFolder As String
+    
+    ' Get the current file path
+    currentFilePath = ThisWorkbook.Path
+    
+    ' Prompt for the new folder name
+    newFolderName = InputBox("Enter the name for the new folder:", "New Folder Name")
+    
+    ' Define the path for the new main folder
+    mainFolderPath = currentFilePath & "\" & newFolderName
+    
+    ' Create the main folder
+    If Len(Dir(mainFolderPath, vbDirectory)) = 0 Then
+        MkDir mainFolderPath
+    End If
+    
+    ' Define subfolder names
+    subFolderNames = Array("w-DOB w-Pass", "no-DOB w-Pass", "w-DOB no-Pass", "no-DOB no-Pass", "PRA", "Jefferson Capital", "Best Egg", "Zwicker and Associates")
+    
+    ' Create subfolders
+    Dim subFolder As Variant
+    For Each subFolder In subFolderNames
+        If Len(Dir(mainFolderPath & "\" & subFolder, vbDirectory)) = 0 Then
+            MkDir mainFolderPath & "\" & subFolder
+        End If
+    Next subFolder
+    
+    
+    'PRA ------
+    ' Create and save files from PRA Output
+    Set ws = ThisWorkbook.Sheets("PRA Output")
+    newFileName = "Guardian Litigation Group - Inventory " & newFolderName & ".xlsx"
+    filePath = mainFolderPath & "\PRA\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook
+    wb.Close False
+    ' PRA End -------
+    
+    ' Jefferson Capital -------
+    ' Create and save files from Jefferson Capital Output
+    Set ws = ThisWorkbook.Sheets("Jefferson Capital Output")
+    newFileName = "Guardian Litigation Group - Inventory " & newFolderName & ".xlsx"
+    filePath = mainFolderPath & "\Jefferson Capital\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook
+    wb.Close False
+    ' Jefferson Capital End -------
+    
+    ' Best Egg -------
+    ' Create and save files for BestEgg Output (no-DOB no-Pass)
+    Set ws = ThisWorkbook.Sheets("no-DOB")
+    newFileName = "Marlette_Vendor_File" & Format(Date, "YYYYMMDD") & ".xlsx" 'Specific name file requested by Best Egg
+    filePath = mainFolderPath & "\Best Egg\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the no-DOB worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook
+    wb.Close False
+    ' Best Egg End -------
+    
+    
+    ' Zwicker and Associates -------
+    ' Create and save files for Zwicker and Associates
+    Set ws = ThisWorkbook.Sheets("no-DOB")
+    newFileName = "Guardian Litigation Group - Inventory " & newFolderName & ".xlsx"
+    password = "GuardianLit"
+    filePath = mainFolderPath & "\Zwicker and Associates\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook, password:=password
+    wb.Close False
+    
+    'Create and save files for Zwicker and Associates AMEX
+    Set ws = ThisWorkbook.Sheets("Drop AMEX")
+    newFileName = "Guardian Litigation Group - Inventory AMEX " & newFolderName & ".xlsx"
+    filePath = mainFolderPath & "\Zwicker and Associates\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook, password:=password
+    wb.Close False
+    
+    ' Zwicker and Associates End -------
+    
+
+    ' Create files from w-DOB worksheet (no password and with password)
+    Set ws = ThisWorkbook.Sheets("w-DOB")
+    newFileName = "Guardian Litigation Group - Inventory " & newFolderName & ".xlsx"
+    
+    ' File without password (no-Pass)
+    filePath = mainFolderPath & "\w-DOB no-Pass\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook
+    wb.Close False
+    
+    ' File with password (w-Pass)
+    password = "GuardianLit"
+    filePath = mainFolderPath & "\w-DOB w-Pass\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook, password:=password
+    wb.Close False
+    
+    ' Create files from no-DOB worksheet (no password and with password)
+    Set ws = ThisWorkbook.Sheets("no-DOB")
+    newFileName = "Guardian Litigation Group - Inventory " & newFolderName & ".xlsx"
+    
+    ' File without password (no-Pass)
+    filePath = mainFolderPath & "\no-DOB no-Pass\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook
+    wb.Close False
+    
+    ' File with password (w-Pass)
+    password = "GuardianLit"
+    filePath = mainFolderPath & "\no-DOB w-Pass\" & newFileName
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook, password:=password
+    wb.Close False
+    
+    ' Ask for the destination folder to copy the entire folder structure
+    destinationFolder = "G:\My Drive\GLG\GLG Scrub\GLG Scrub   Inventory" 'InputBox("Enter the destination folder path to copy the folder structure:", "Destination Folder")
+    
+    ' Copy the entire folder structure (including subfolders and files)
+    sourceFolder = mainFolderPath ' Folder to copy
+    Call CopyFolderStructure(sourceFolder, destinationFolder)
+
+    MsgBox "Folders and files created and copied successfully!"
+
+End Sub
