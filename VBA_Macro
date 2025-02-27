@@ -172,7 +172,7 @@ Sub CreateFoldersAndFiles()
     ' Best Egg -------
     ' Create and save files for BestEgg Output (no-DOB no-Pass)
     Set ws = ThisWorkbook.Sheets("no-DOB")
-    newFileName = "Marlette_Vendor_File" & Format(Date, "YYYYMMDD") & ".xlsx" 'Specific name file requested by Best Egg
+    newFileName = "Marlette_Vendor_File_" & Format(Date, "YYYYMMDD") & ".xlsx" 'Specific name file requested by Best Egg
     filePath = mainFolderPath & "\Best Egg\" & newFileName
     Set wb = Workbooks.Add
     Set newWs = wb.Sheets(1)
