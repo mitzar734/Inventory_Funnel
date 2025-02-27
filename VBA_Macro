@@ -4,7 +4,7 @@ Sub ClearSheetContents()
     Dim i As Integer
     
     ' Specify the names of the sheets to be cleared
-    sheetNames = Array("Drop", "Drop AMEX")
+    sheetNames = Array("Drop", "Drop AMEX", "Drop NAVY FCU", "Drop Credit One")
     
     ' Loop through each specified sheet
     For i = LBound(sheetNames) To UBound(sheetNames)
@@ -82,6 +82,8 @@ Sub CreateFoldersAndFiles()
     
     ' Prompt for the new folder name
     newFolderName = InputBox("Enter the name for the new folder:", "New Folder Name")
+    ' If the user cancels or enters nothing, exit the macro
+    If newFolderName = "" Then Exit Sub
     
     ' Define the path for the new main folder
     mainFolderPath = currentFilePath & "\" & newFolderName
@@ -92,7 +94,7 @@ Sub CreateFoldersAndFiles()
     End If
     
     ' Define subfolder names
-    subFolderNames = Array("w-DOB w-Pass", "no-DOB w-Pass", "w-DOB no-Pass", "no-DOB no-Pass", "PRA", "Jefferson Capital", "Best Egg", "Zwicker and Associates")
+    subFolderNames = Array("w-DOB w-Pass", "no-DOB w-Pass", "w-DOB no-Pass", "no-DOB no-Pass", "PRA", "Jefferson Capital", "Best Egg", "Zwicker and Associates", "Credit Control")
     
     ' Create subfolders
     Dim subFolder As Variant
@@ -101,6 +103,40 @@ Sub CreateFoldersAndFiles()
             MkDir mainFolderPath & "\" & subFolder
         End If
     Next subFolder
+    
+    
+    
+    ' Credit Control -------
+    ' Create and save files for Credit Control NAVY FCU
+    Set ws = ThisWorkbook.Sheets("Drop NAVY FCU")
+    newFileName = "Guardian Litigation Group - Inventory NAVY FCU " & newFolderName & ".xlsx"
+    filePath = mainFolderPath & "\Credit Control\" & newFileName
+    password = "GuardianLit"
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook, password:=password
+    wb.Close False
+    
+    ' Create and save files for Credit Control Credit One
+    Set ws = ThisWorkbook.Sheets("Drop Credit One")
+    newFileName = "Guardian Litigation Group - Inventory Credit One " & newFolderName & ".xlsx"
+    filePath = mainFolderPath & "\Credit Control\" & newFileName
+    password = "GuardianLit"
+    Set wb = Workbooks.Add
+    Set newWs = wb.Sheets(1)
+    
+    ' Copy values from the original worksheet to the new sheet
+    CopyValuesOnly ws, newWs
+    
+    wb.SaveAs filePath, FileFormat:=xlOpenXMLWorkbook, password:=password
+    wb.Close False
+    
+    ' Credit Control End -------
+    
     
     
     'PRA ------
